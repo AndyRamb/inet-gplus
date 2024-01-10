@@ -67,14 +67,16 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     htbClass* newClass = new htbClass();
     lastGlobalIdUsed += 1;
     newClass->classId = lastGlobalIdUsed;
+    newClass->notScaled = true;
+    newClass->notScaled2 = true;
     //printf(lastGlobalIdUsed)
     //std::cout << lastGlobalIdUsed << std::endl;
     newClass->name = oneClass->get("id").stringValue();
-    const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be satic 0?
+    const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
 
     // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
     long long rate = oneClass->get("rate").intValue() * 1e3;
-    std::cout << oneClass->get("rate").intValue() << endl;
+    //std::cout << oneClass->get("rate").intValue() << endl;
     newClass->assignedRate = rate;
     long long ceil = oneClass->get("ceil").intValue() * 1e3;
     newClass->ceilingRate = ceil;
@@ -139,6 +141,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
 
     newClass->burstSize = burst;
+    std::cout << "this should only be printed 5 times" << endl;
     newClass->cburstSize = cburst;
     int level = oneClass->get("level").intValue(); // Level in the tree structure. 0 = LEAF!!!
     newClass->level = level;
@@ -887,16 +890,23 @@ void HtbScheduler::updateClassMode(htbClass *cl, long long *diff)
         emit(cl->classMode, cl->mode);
     }
 }
-
+void HtbScheduler::scaleBucket(htbClass *cl, double k){
+    std::cout << cl->name << " before: " << cl->ceilingRate;
+    cl->ceilingRate*= k;
+    std::cout << " after: " << cl->ceilingRate<< endl;
+}
 void HtbScheduler::accountTokens(htbClass *cl, long long bytes, long long diff) {
 
     long long toks = diff + cl->tokens;
     if (toks > cl->burstSize) {
+        EV_INFO << toks << ">" << cl->burstSize << endl;
         toks = cl->burstSize;
+        EV_INFO << "toks = cl->burstSize = " << toks << endl;
     }
     toks -= bytes * 8 * 1e9 / cl->assignedRate;
     if (toks <= -cl->mbuffer)
         toks = 1 - cl->mbuffer;
+        EV_INFO << "toks = 1 - cl->mbuffer = " << toks << endl;
     cl->tokens = toks;
     emit(cl->tokenBucket, (long) cl->tokens);
     return;
@@ -945,7 +955,7 @@ void HtbScheduler::chargeClass(htbClass *leafCl, int borrowLevel, Packet *packet
     long long bytes = (long long) packetToDequeue->getByteLength() + phyHeaderSize;
     int old_mode;
     long long diff;
-
+    
     htbClass *cl;
     cl = leafCl;
 
@@ -953,9 +963,21 @@ void HtbScheduler::chargeClass(htbClass *leafCl, int borrowLevel, Packet *packet
         if (cl->checkpointTime == simTime()) {
             throw cRuntimeError("Updating a class that was already updated exactly now!");
         }
+        if (simTime() > 4 && cl->notScaled && strcmp(cl->name, "root") != 0 ) {
+            //scaleBucket(cl, 0.25);
+            cl->notScaled = false;
+        }
+        else if (simTime() > 8 && cl->notScaled2 && strcmp(cl->name, "root") != 0 )
+        {
+            //scaleBucket(cl, 4);
+            cl->notScaled2 = false;
+        }
+        
         diff = (long long) std::min((simTime() - cl->checkpointTime).inUnit(SIMTIME_NS), (int64_t)cl->mbuffer);
+        EV_INFO << "################";
         EV_INFO << "chargeClass: Diff1 is: " << diff << "; Packet Bytes: " << bytes << "Used toks:" << bytes * 8 * 1e9 / cl->assignedRate << "Used ctoks:" << bytes * 8 * 1e9 / cl->ceilingRate << endl;
         if (cl->level >= borrowLevel) {
+            EV_INFO << "simtime:" << simTime() << endl;
             accountTokens(cl, bytes, diff);
         }
         else {

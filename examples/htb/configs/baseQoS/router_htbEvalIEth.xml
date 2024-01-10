@@ -8,8 +8,4 @@ SPDX-License-Identifier: GPL-2.0-or-later
 <config>
    <interface address="10.3.0.0" hosts="hostFDO[0]" names="eth0" netmask="255.255.255.252" />
    <interface address="10.3.0.4" hosts="serverFDO" names="eth0" netmask="255.255.255.252" />
-   <interface address="10.3.0.8" hosts="serverFD1" names="eth0" netmask="255.255.255.252" />
-   <interface address="10.3.0.12" hosts="serverFD2" names="eth0" netmask="255.255.255.252" />
-   <interface address="10.3.0.16" hosts="serverFD3" names="eth0" netmask="255.255.255.252" />
-   <interface address="10.3.0.20" hosts="serverFD4" names="eth0" netmask="255.255.255.252" />
 </config>

@@ -1,0 +1,100 @@
+[
+    {
+        "id":"root",
+        "parentId": "NULL",
+        "rate": 50000,
+        "ceil": 50000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 2,
+        "quantum": 1500,
+        "mbuffer": 60
+    },
+	{
+        "id":"innerC1",
+        "parentId": "root",
+        "rate": 20000,
+        "ceil": 40000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 1,
+        "quantum": 1500,
+        "mbuffer": 60
+    },
+	{
+        "id":"innerC2",
+        "parentId": "root",
+        "rate": 30000,
+        "ceil": 40000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 1,
+        "quantum": 1500,
+        "mbuffer": 60
+    },
+	{
+        "id":"leafhostFDO0",
+        "parentId": "innerC1",
+        "rate": 3000,
+        "ceil": 20000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 0,
+        "quantum": 1500,
+        "mbuffer": 60,
+		"priority": 0,
+        "queueNum": 0
+    },
+	{
+        "id":"leafhostFDO1",
+        "parentId": "innerC1",
+        "rate": 6000,
+        "ceil": 25000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 0,
+        "quantum": 1500,
+        "mbuffer": 60,
+		"priority": 1,
+        "queueNum": 1
+    },
+	{
+        "id":"leafhostFDO2",
+        "parentId": "innerC1",
+        "rate": 9000,
+        "ceil": 30000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 0,
+        "quantum": 1500,
+        "mbuffer": 60,
+		"priority": 2,
+        "queueNum": 2
+    },
+	{
+        "id":"leafhostFDO3",
+        "parentId": "innerC2",
+        "rate": 12000,
+        "ceil": 35000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 0,
+        "quantum": 1500,
+        "mbuffer": 60,
+		"priority": 1,
+        "queueNum": 3
+    },
+	{
+        "id":"leafhostFDO4",
+        "parentId": "innerC2",
+        "rate": 15000,
+        "ceil": 40000,
+        "burst": 2000,
+        "cburst": 2000,
+        "level": 0,
+        "quantum": 1500,
+        "mbuffer": 60,
+		"priority": 2,
+        "queueNum": 4
+    }
+]

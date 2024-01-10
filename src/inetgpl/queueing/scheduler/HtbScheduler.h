@@ -80,7 +80,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
 
         // Specifies for which priorities the class is now active and in green/yellow mode
         bool activePriority[maxHtbNumPrio] = { false };
-
+        bool notScaled;
+        bool notScaled2;
         // If class not in green mode, it specifies when the next mode change is expected
         simtime_t nextEventTime = 0;
 
@@ -180,6 +181,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     inline long htb_lowater(htbClass *cl);
 
     void updateClassMode(htbClass *cl, long long *diff);
+    void scaleBucket(htbClass *cl, double k);
     void accountTokens(htbClass *cl, long long bytes, long long diff);
     void accountCTokens(htbClass *cl, long long bytes, long long diff);
     void chargeClass(htbClass *leafCl, int borrowLevel, Packet *packetToDequeue);
