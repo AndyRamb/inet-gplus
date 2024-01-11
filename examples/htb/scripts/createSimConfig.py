@@ -44,6 +44,7 @@ def genHTBConfig(numVID, numLVD, numFDO, numSSH, numVIP):
     fh.write(json.dumps(data))
     fh.close
 
+# TODO : qoeEst.ClientQoEEstimator
 def getBandForQoECli(host, desQoE):
     qoeEstimator = qoeEst.ClientQoeEstimator(host)
     qoe = np.array([qoeEstimator.estQoEb(x) for x in qoeEstimator.yAxis])
