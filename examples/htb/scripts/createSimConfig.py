@@ -3,46 +3,8 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import math
 
-sampleDict = {
-    "id": "sample",
-    "parentId": "NULL",
-    "rate": 0,
-    "ceil": 0,
-    "burst": 2000,
-    "cburst": 2000,
-    "level": 1,
-    "quantum": 1500,
-    "mbuffer": 60
-}
-
-def genHTBConfig(numVID, numLVD, numFDO, numSSH, numVIP):
-    data = []
-
-    fh = open(str(name) + ".json", "a+")
-
-    root = sampleDict.copy()
-    root["id"] = "root"
-    root["rate"] = 50000
-    root["ceil"] = 50000
-    data.append(root)
 
 
-    for FD in range(numFDO):
-        tempDict = sampleDict.copy()
-        tempDict["id"] = "leafhostFDO" + str(FD)
-        tempDict["parentId"] = "root"
-        tempDict["rate"] = 5000
-        tempDict["ceil"] = 10000
-        tempDict["burst"] = 2000
-        tempDict["cburst"] = 2000
-        tempDict["level"] = 0
-        tempDict["priority"] = 0
-        tempDict["queueNum"] = FD
-        
-        data.append(tempDict)
-
-    fh.write(json.dumps(data))
-    fh.close
 
 # TODO : qoeEst.ClientQoEEstimator
 def getBandForQoECli(host, desQoE):
@@ -106,91 +68,100 @@ def simpleAdmission(availBand, desiredQoE, cliTypes, maxNumCliType, ceilMultipli
 
 # getBandForQoECli('hostFDO', 3)
 
-def prepareHTBClassXML(configElem, classType, className, clParent, clRate, clCeil, clBurst, clCburst, clLevel, clQuantum, clMbuffer, clPrio, clQueueNum):
-    classElem = ET.SubElement(configElem, 'class')
-    classElem.set('id', classType+className)
-
-    parentId = ET.SubElement(classElem, 'parentId')
-    parentId.text = clParent
-
-    rate = ET.SubElement(classElem, 'rate')
-    rate.set('type', 'int')
-    rate.text = clRate
-
-    ceil = ET.SubElement(classElem, 'ceil')
-    ceil.set('type', 'int')
-    ceil.text = clCeil
-
-    burst = ET.SubElement(classElem, 'burst')
-    burst.set('type', 'int')
-    burst.text = clBurst
-
-    cburst = ET.SubElement(classElem, 'cburst')
-    cburst.set('type', 'int')
-    cburst.text = clCburst
-
-    level = ET.SubElement(classElem, 'level')
-    level.set('type', 'int')
-    level.text = clLevel
-
-    quantum = ET.SubElement(classElem, 'quantum')
-    quantum.set('type', 'int')
-    quantum.text = clQuantum
-
-    mbuffer = ET.SubElement(classElem, 'mbuffer')
-    mbuffer.set('type', 'int')
-    mbuffer.text = clMbuffer
-
-    if classType == 'leaf':
-        prio = ET.SubElement(classElem, 'priority')
-        prio.text = clPrio
-
-        queueNum = ET.SubElement(classElem, 'queueNum')
-        queueNum.set('type', 'int')
-        queueNum.text = clQueueNum
-
+sampleDict = {
+    "id": "sample",
+    "parentId": "NULL",
+    "rate": 0,
+    "ceil": 0,
+    "burst": 1600,
+    "cburst": 1600,
+    "level": 1,
+    "quantum": 1600,
+    "mbuffer": 60
+}
 # {leafName:[assuredRate, ceilRate, priority, queueNum]}
-def genHTBconfig(configName, linkSpeed, leafClassesConfigs):
+def genHTBConfig(configName, linkSpeed, leafClassesConfigs):
+    data = []
 
-    configElem = ET.Element('config')
-    prepareHTBClassXML(configElem, 'root', '', 'NULL', str(linkSpeed), str(linkSpeed), '1600', '1600', '1', '1600', '60', '', '')
+    fh = open('./examples/htb/configs/'+configName+ "HTB.json", "a+")
+
+    root = sampleDict.copy()
+    root["id"] = "root"
+    root["rate"] = linkSpeed
+    root["ceil"] = linkSpeed
+    data.append(root)
+
+
     for leaf in leafClassesConfigs:
-        prepareHTBClassXML(configElem, 'leaf', leaf, 'root', str(leafClassesConfigs[leaf][0]), str(leafClassesConfigs[leaf][1]), '1600', '1600', '0', '1600', '60', str(leafClassesConfigs[leaf][2]), str(leafClassesConfigs[leaf][3]))
-    # prepareHTBClassXML(configElem, 'leaf', 'Two', 'root', '2000', '5000', '1600', '1600', '0', '1600', '60', '0', '1')
+        tempDict = sampleDict.copy()
+        tempDict["id"] = 'leaf' + leaf
+        tempDict["parentId"] = "root"
+        tempDict["rate"] = leafClassesConfigs[leaf][0]
+        tempDict["ceil"] = leafClassesConfigs[leaf][1]
+        tempDict["burst"] = 1600
+        tempDict["cburst"] = 1600
+        tempDict["level"] = 0
+        tempDict["quantum"] = 1600
+        tempDict["mbuffer"] = 60
+        tempDict["priority"] = leafClassesConfigs[leaf][2]
+        tempDict["queueNum"] = leafClassesConfigs[leaf][3]
+        
+        data.append(tempDict)
 
-    # create a new XML file with the results
-    mydata = ET.tostring(configElem)
-    myfile = open('../simulations/configs/htbTree/'+configName+"HTB.xml", "wb")
-    myfile.write(mydata)
-    # shutil.copy2(configName+"HTB.xml", '../simulations/configs/htbTree')
+    fh.write(json.dumps(data))
+    fh.close
+
+
+#genHTBConfig('Andytest', 10000, {'One':[4000, 7000, 0, 0], 'Two':[2000, 5000, 0, 1]})
+
+def genHTBconfigWithInner(configName, linkSpeed, leafClassesConfigs, innerClassesConfigs, numLevels):
+    data = []
+
+    fh = open('./examples/htb/configs/'+configName+ "HTB.json", "a+")
+
+    root = sampleDict.copy()
+    root["id"] = "root"
+    root["level"] = numLevels
+    root["rate"] = linkSpeed
+    root["ceil"] = linkSpeed
+    data.append(root)
+
+    for inner in innerClassesConfigs:
+        tempDict = sampleDict.copy()
+        tempDict["id"] = 'inner' + inner
+        tempDict["parentId"] = innerClassesConfigs[inner][2]
+        tempDict["rate"] = innerClassesConfigs[inner][0]
+        tempDict["ceil"] = innerClassesConfigs[inner][1]
+        tempDict["burst"] = 2000
+        tempDict["cburst"] = 2000
+        tempDict["level"] = innerClassesConfigs[inner][3]
+        tempDict["quantum"] = 1500
+        tempDict["mbuffer"] = 60
+        
+        data.append(tempDict)
+
+    for leaf in leafClassesConfigs:
+        tempDict = sampleDict.copy()
+        tempDict["id"] = 'leaf' + leaf
+        tempDict["parentId"] = leafClassesConfigs[leaf][4]
+        tempDict["rate"] = leafClassesConfigs[leaf][0]
+        tempDict["ceil"] = leafClassesConfigs[leaf][1]
+        tempDict["burst"] = 2000
+        tempDict["cburst"] = 2000
+        tempDict["level"] = 0
+        tempDict["quantum"] = 1500
+        tempDict["mbuffer"] = 60
+        tempDict["priority"] = leafClassesConfigs[leaf][2]
+        tempDict["queueNum"] = leafClassesConfigs[leaf][3]
+        
+        data.append(tempDict)
+
+    fh.write(json.dumps(data))
+    fh.close
 
 # {leafName:[assuredRate, ceilRate, priority, queueNum, parentId, level]}
 # {innerName:[assuredRate, ceilRate, parentId, level]}
-def genHTBconfigWithInner(configName, linkSpeed, leafClassesConfigs, innerClassesConfigs, numLevels):
 
-    configElem = ET.Element('config')
-    prepareHTBClassXML(configElem, 'root', '', 'NULL', str(linkSpeed), str(linkSpeed), '2000', '2000', str(numLevels), '1500', '60', '', '')
-    # prepareHTBClassXML(configElem, 'root', '', 'NULL', str(linkSpeed), str(linkSpeed), '1600', '1600', str(numLevels), '1600', '60', '', '')
-    
-    for inner in innerClassesConfigs:
-        # print(inner)
-        prepareHTBClassXML(configElem, 'inner', inner, str(innerClassesConfigs[inner][2]), str(innerClassesConfigs[inner][0]), str(innerClassesConfigs[inner][1]), '2000', '2000', str(innerClassesConfigs[inner][3]), '1500', '60', '', '')
-        # prepareHTBClassXML(configElem, 'inner', inner, str(innerClassesConfigs[inner][2]), str(innerClassesConfigs[inner][0]), str(innerClassesConfigs[inner][1]), '1600', '1600', str(innerClassesConfigs[inner][3]), '1600', '60', '', '')
-    
-    for leaf in leafClassesConfigs:
-        prepareHTBClassXML(configElem, 'leaf', leaf, str(leafClassesConfigs[leaf][4]), str(leafClassesConfigs[leaf][0]), str(leafClassesConfigs[leaf][1]), '2000', '2000', str(leafClassesConfigs[leaf][5]), '1500', '60', str(leafClassesConfigs[leaf][2]), str(leafClassesConfigs[leaf][3]))
-        # prepareHTBClassXML(configElem, 'leaf', leaf, str(leafClassesConfigs[leaf][4]), str(leafClassesConfigs[leaf][0]), str(leafClassesConfigs[leaf][1]), '1600', '1600', str(leafClassesConfigs[leaf][5]), '1600', '60', str(leafClassesConfigs[leaf][2]), str(leafClassesConfigs[leaf][3]))
-    
-    
-    # prepareHTBClassXML(configElem, 'leaf', 'Two', 'root', '2000', '5000', '1600', '1600', '0', '1600', '60', '0', '1')
-
-    # create a new XML file with the results
-    mydata = ET.tostring(configElem)
-    myfile = open('../simulations/configs/htbTree/'+configName+"HTB.xml", "wb")
-    myfile.write(mydata)
-    # shutil.copy2(configName+"HTB.xml", '../simulations/configs/htbTree')
-
-# genHTBconfig('stasTest10a', 10000, {'One':[4000, 7000, 0, 0], 'Two':[2000, 5000, 0, 1]})
 
 def makeIPhostNum(ipPrefix, hostNum):
     ipString = ipPrefix + '.'
@@ -376,18 +347,18 @@ def genAllSliConfigsHTBRun(configName, baseName, availBand, desiredQoE, types, h
 
 
 
-name = sys.argv[1]
-slices = sys.argv[2]
+# name = sys.argv[1]
+# slices = sys.argv[2]
 
-print(name)
-if os.path.isfile("./" + str(name) + ".json"):
-    print("Config already exists with this name!")
+# print(name)
+# if os.path.isfile("./" + str(name) + ".json"):
+#     print("Config already exists with this name!")
 
-else:
-    numVID = int(name.split('VID')[1].split('_LVD')[0])
-    numLVD = int(name.split('LVD')[1].split('_FDO')[0])
-    numFDO = int(name.split('FDO')[1].split('_SSH')[0])
-    numSSH = int(name.split('SSH')[1].split('_VIP')[0])
-    numVIP = int(name.split('VIP')[1].split('/')[0])
+# else:
+#     numVID = int(name.split('VID')[1].split('_LVD')[0])
+#     numLVD = int(name.split('LVD')[1].split('_FDO')[0])
+#     numFDO = int(name.split('FDO')[1].split('_SSH')[0])
+#     numSSH = int(name.split('SSH')[1].split('_VIP')[0])
+#     numVIP = int(name.split('VIP')[1].split('/')[0])
 
-    genHTBConfig(numVID, numLVD, numFDO, numSSH, numVIP)
+#     genHTBConfig(numVID, numLVD, numFDO, numSSH, numVIP)
