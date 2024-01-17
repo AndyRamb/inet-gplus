@@ -252,8 +252,10 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
 
 void HtbScheduler::initialize(int stage)
 {
+    std::cout << "Outer initialize" << endl;
     PacketSchedulerBase::initialize(stage); // Initialize the packet scheduler module
     if (stage == INITSTAGE_LOCAL) {
+        std::cout << "Inner initialize local" << endl;
         mtu = par("mtu");
         phyHeaderSize = par("phyLayerHeaderLength");
         valueCorectnessCheck = par("checkHTBTreeValuesForCorectness");
@@ -301,6 +303,7 @@ void HtbScheduler::initialize(int stage)
         scheduleAt(4, scaleBucketEvent);
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
+        std::cout << "Inner initialize initStageNetworkInterfaceConfig" << endl;
         EV_INFO << "Get link datarate" << endl;
         auto iface = getContainingNicModule(this);
         linkDatarate = iface->getTxTransmissionChannel()->getNominalDatarate();
@@ -335,7 +338,7 @@ void HtbScheduler::handleMessage(cMessage *message)
         CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
     }
     else if (message == scaleBucketEvent ) {
-        std::cout << "kHEllo from scalebucketEvent" << endl;
+        std::cout << "Hello from scalebucketEvent" << endl;
     }
     else
         throw cRuntimeError("Unknown self message");
