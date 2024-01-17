@@ -2,7 +2,7 @@ import json, os, sys
 import xml.etree.ElementTree as ET
 import numpy as np
 import math
-
+import qoeEstimation as qoeEst
 
 
 
@@ -24,7 +24,7 @@ def getBandForQoECli(host, desQoE):
 #     for tQ in [3.0, 3.5, 4.0]:
 #         getBandForQoECli(app, tQ)
 
-
+print(getBandForQoECli('hostcVIP', 3.5)*100/1000)
 # default: ceilMultiplier = 1.25; guaranteeMultiplier = 1.0
 def simpleAdmission(availBand, desiredQoE, cliTypes, maxNumCliType, ceilMultiplier, guaranteeMultiplier):
     usedBand = 0
@@ -80,7 +80,7 @@ sampleDict = {
     "mbuffer": 60
 }
 # {leafName:[assuredRate, ceilRate, priority, queueNum]}
-def genHTBConfig(configName, linkSpeed, leafClassesConfigs):
+def genHTBconfig(configName, linkSpeed, leafClassesConfigs):
     data = []
 
     fh = open('./examples/htb/configs/'+configName+ "HTB.json", "a+")
@@ -114,10 +114,10 @@ def genHTBConfig(configName, linkSpeed, leafClassesConfigs):
 
 #genHTBConfig('Andytest', 10000, {'One':[4000, 7000, 0, 0], 'Two':[2000, 5000, 0, 1]})
 
-def genHTBconfigWithInner(configName, linkSpeed, leafClassesConfigs, innerClassesConfigs, numLevels):
+def genHTBconfigWithInner(configName, linkSpeed, leafClassesConfigs, innerClassesConfigs, numLevels): #Creates two layer HTB config in data array, root, inner and leaf classes, writes to json file
     data = []
 
-    fh = open('./examples/htb/configs/'+configName+ "HTB.json", "a+")
+    fh = open('./examples/htb/configs/'+configName+ 'HTB.json', 'a+')
 
     root = sampleDict.copy()
     root["id"] = "root"
@@ -268,7 +268,7 @@ def genBaselineIniConfig(confName, base, numHostsPerType, hostIPprefixes, availB
     configString += '*.router*.ppp[0].queue.htbHysterisis = false\n'
     configString += '*.router*.ppp[0].queue.scheduler.adjustHTBTreeValuesForCorectness = false\n'
     configString += '*.router*.ppp[0].queue.scheduler.checkHTBTreeValuesForCorectness = false\n'
-    configString += '*.router*.ppp[0].queue.htbTreeConfig = xmldoc(\"configs/htbTree/' + confName + 'HTB.xml\")\n'
+    configString += '*.router*.ppp[0].queue.htbTreeConfig = readJSON(\"./examples/htb/configs/'+confName+'HTB.json\")   ' # xmldoc(\"configs/htbTree/' + confName + 'HTB.xml\")\n'
     configString += '*.router*.ppp[0].queue.classifier.defaultGateIndex = 0\n'
     configString += '*.router0.ppp[0].queue.classifier.packetFilters = ' + packDataFiltersR0 + '\n'
     configString += '*.router1.ppp[0].queue.classifier.packetFilters = ' + packDataFiltersR1 + '\n\n'
@@ -344,8 +344,41 @@ def genAllSliConfigsHTBRun(configName, baseName, availBand, desiredQoE, types, h
     f2.write('./runAndExportSimConfig.sh -i parameterStudyConfiguration.ini -c ' + configName + ' -s 1\n')
     f2.close()
 
+##################################
+#FDO client
+targetQoE = [3.5]
+assuredMulti = [1.0]
+# assuredMulti = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]
+rates = [100]
+defaultNumClients = 100
+ceils = [2.0]
+# ceils = [1.0, 1.5, 2.0]
+dPrio = [False]
+client = 'FDO'
+studyName = 'FDODynamic'
 
-
+counter = 0
+for rate in rates:
+    for qoE in targetQoE:
+        for ceil in ceils:
+            rate = getBandForQoECli('host'+client, qoE)*defaultNumClients/1000
+            # for mult1 in assuredMulti:
+            #     maxCli = int(defaultNumClients/mult1)
+            #     for mult in [x for x in assuredMulti if x < mult1]:
+            #         # print(int(defaultNumClients/mult1))
+            #         for dp in dPrio:
+            #             print(maxCli, mult, ceil)
+            #             # genAllSliConfigsHTBRun(studyName+'-maxCli'+str(maxCli)+'_R'+str(int(rate))+'_Q'+str(int(qoE*10))+'_M'+str(int(mult*100))+'_C'+str(int(ceil*100))+'_P'+str(dp), 'liteCbaselineTestTokenQoS_base', rate, qoE, [client], [[client]], ['connFIX0'], maxCli, defaultNumClients, ceil, mult, dp)
+            #             counter += 1
+            print("rate:" + str(rate))
+            for mult in assuredMulti:
+                maxCli = int(defaultNumClients/mult)
+                for dp in dPrio:
+                    print(maxCli, mult, ceil)
+                    # counter+=1
+                    genAllSliConfigsHTBRun(studyName+'-maxCli'+str(maxCli)+'_R'+str(int(rate))+'_Q'+str(int(qoE*10))+'_M'+str(int(mult*100))+'_C'+str(int(ceil*100))+'_P'+str(dp), 'liteCbaselineTestTokenQoS_base', rate, qoE, [client], [[client]], ['connFIX0'], maxCli, defaultNumClients, ceil, mult, dp)
+                    counter += 1
+print(counter)
 
 # name = sys.argv[1]
 # slices = sys.argv[2]
