@@ -144,6 +144,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     std::vector<htbClass*> leafClasses; // Leaf classes saved here for ease of access
 
     cMessage *classModeChangeEvent = nullptr;
+    cMessage *scaleBucketEvent = nullptr;
 
   protected:
     virtual void initialize(int stage) override;
