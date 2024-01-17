@@ -11,9 +11,18 @@ def clientAdmission(clients):
         configString += '*.hostFDO[*].app['+ str(a) +'].startTime = ' + str(startTime[a]) + 's\n' 
         configString += '*.hostFDO[*].app['+ str(a) +'].stopTime = ' + str(endTime[a]) + 's\n'
 
-    times = numpy.unique(numpy.concatenate((startTime, endTime), axis=None))
+    changeTimes = numpy.unique(numpy.concatenate((startTime, endTime), axis=None))
 
-    print(times)
+    print(changeTimes)
+
+    for t in changeTimes:
+        for a in app:
+            if startTime[a] > t:
+                print(str(a) + "a starts after time t")
+            elif startTime[a] <= t and t < endTime[a]:
+                print(str(a) + "a is running at time t, adjust resources")
+            else:
+                print(str(a) + "a is not running at time t")
     
     return configString
 

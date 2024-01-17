@@ -297,6 +297,8 @@ void HtbScheduler::initialize(int stage)
         }
 
         classModeChangeEvent = new cMessage("probablyClassNotRedEvent"); // Omnet++ event to take action when new elements to dequeue are available
+        scaleBucketEvent = new cMessage("timeToScaleBucket");
+        scheduleAt(4s, scaleBucketEvent);
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
         EV_INFO << "Get link datarate" << endl;
@@ -331,6 +333,9 @@ void HtbScheduler::handleMessage(cMessage *message)
     Enter_Method("handleMessage");
     if (message == classModeChangeEvent) {
         CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
+    }
+    else if (message == scaleBucketEvent ) {
+        std::cout << "kHEllo from scalebucketEvent" << endl;
     }
     else
         throw cRuntimeError("Unknown self message");

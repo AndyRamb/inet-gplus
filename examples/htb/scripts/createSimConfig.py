@@ -24,7 +24,7 @@ def getBandForQoECli(host, desQoE):
 #     for tQ in [3.0, 3.5, 4.0]:
 #         getBandForQoECli(app, tQ)
 
-print(getBandForQoECli('hostcVIP', 3.5)*100/1000)
+#print(getBandForQoECli('hostcVIP', 3.5)*100/1000)
 # default: ceilMultiplier = 1.25; guaranteeMultiplier = 1.0
 def simpleAdmission(availBand, desiredQoE, cliTypes, maxNumCliType, ceilMultiplier, guaranteeMultiplier):
     usedBand = 0
