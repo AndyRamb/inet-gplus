@@ -247,6 +247,12 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     getEnvir()->addResultRecorders(this, newClass->classMode, classModeStatisticName, classModeStatisticTemplate);
     emit(newClass->classMode, newClass->mode);
 
+    //TODO: continue this:
+    scaleBucketEvent = new cMessage("timeToScaleBucket");
+    //scaleBucketEvent->addPar(newClass);
+    scheduleAt(4, scaleBucketEvent);
+
+
     return newClass;
 }
 
@@ -255,7 +261,7 @@ void HtbScheduler::initialize(int stage)
     std::cout << "Outer initialize" << endl;
     PacketSchedulerBase::initialize(stage); // Initialize the packet scheduler module
     if (stage == INITSTAGE_LOCAL) {
-        std::cout << "Inner initialize local" << endl;
+        std::cout << "Inner initialize local" << stage << endl;
         mtu = par("mtu");
         phyHeaderSize = par("phyLayerHeaderLength");
         valueCorectnessCheck = par("checkHTBTreeValuesForCorectness");
@@ -299,8 +305,6 @@ void HtbScheduler::initialize(int stage)
         }
 
         classModeChangeEvent = new cMessage("probablyClassNotRedEvent"); // Omnet++ event to take action when new elements to dequeue are available
-        scaleBucketEvent = new cMessage("timeToScaleBucket");
-        scheduleAt(4, scaleBucketEvent);
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
         std::cout << "Inner initialize initStageNetworkInterfaceConfig" << endl;
@@ -338,7 +342,7 @@ void HtbScheduler::handleMessage(cMessage *message)
         CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
     }
     else if (message == scaleBucketEvent ) {
-        std::cout << "Hello from scalebucketEvent" << endl;
+        std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
     }
     else
         throw cRuntimeError("Unknown self message");
