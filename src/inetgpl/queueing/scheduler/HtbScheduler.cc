@@ -73,7 +73,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     //std::cout << lastGlobalIdUsed << std::endl;
     newClass->name = oneClass->get("id").stringValue();
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
-
+    
     // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
     long long rate = oneClass->get("rate").intValue() * 1e3;
     //std::cout << oneClass->get("rate").intValue() << endl;
@@ -247,11 +247,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     getEnvir()->addResultRecorders(this, newClass->classMode, classModeStatisticName, classModeStatisticTemplate);
     emit(newClass->classMode, newClass->mode);
 
-    //TODO: continue this:
-    scaleBucketEvent = new cMessage("timeToScaleBucket");
-    //scaleBucketEvent->addPar(newClass);
-    scheduleAt(4, scaleBucketEvent);
-
+   
 
     return newClass;
 }
@@ -280,6 +276,7 @@ void HtbScheduler::initialize(int stage)
         cValueArray *classes = check_and_cast<cValueArray *>(par("htbTreeConfig").objectValue());
         htb_hysteresis = par("htbHysterisis");
 
+
         // Create all classes and build the tree structure
         //cObject *c = htbConfig->objectValue();
         //cValueArray *classes = htbConfig.objectValue();
@@ -305,6 +302,12 @@ void HtbScheduler::initialize(int stage)
         }
 
         classModeChangeEvent = new cMessage("probablyClassNotRedEvent"); // Omnet++ event to take action when new elements to dequeue are available
+
+         //TODO: continue this:
+        scaleBucketEvent = new cMessage("timeToScaleBucket");
+        //scaleBucketEvent->addObject(newClass->assignedRate);
+        scheduleAt(4, scaleBucketEvent);
+
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
         std::cout << "Inner initialize initStageNetworkInterfaceConfig" << endl;
@@ -343,6 +346,9 @@ void HtbScheduler::handleMessage(cMessage *message)
     }
     else if (message == scaleBucketEvent ) {
         std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
+        for (auto & cl : leafClasses) {
+            std::cout << cl->assignedRate << " " << endl;
+        }
     }
     else
         throw cRuntimeError("Unknown self message");
