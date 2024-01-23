@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <sstream>
 
 #include "inetgpl/queueing/scheduler/HtbScheduler.h"
 
@@ -74,6 +75,36 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     newClass->name = oneClass->get("id").stringValue();
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
     
+
+
+    //Making a linked list with the rate changes if the value exists use that, if not use last value
+    for (int i = 1; i > -1; i--) {
+        std::ostringstream oss;
+        oss << 'rate' << i;
+        char* x=new char[oss.str().length()+1];
+        if (!oneClass->get(x).isNullptr()) {
+            //long long newRate = oneClass->get('rate'+ to_string(i)).intValue() * 1e3;
+            
+            //while (last->next != NULL) {
+            //    last = last->next;
+            //}
+
+            //newRate->next = NULL;
+            //last->next = newRate;
+        }   
+        else {
+            //while (last->next != NULL) {
+            //    last = last->next;
+            //}
+            //long long newRate = last->assignedRate;
+
+            //newRate->next = NULL;
+            //last->next = newRate;
+        }
+    }
+
+
+
     // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
     long long rate = oneClass->get("rate").intValue() * 1e3;
     //std::cout << oneClass->get("rate").intValue() << endl;
@@ -348,6 +379,8 @@ void HtbScheduler::handleMessage(cMessage *message)
         std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
         for (auto & cl : leafClasses) {
             std::cout << cl->assignedRate << " " << endl;
+
+            //cl->assignedRate = assignedRate->nextRate
         }
     }
     else
