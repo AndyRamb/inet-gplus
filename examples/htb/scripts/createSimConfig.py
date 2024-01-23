@@ -370,7 +370,7 @@ for rate in rates:
             #             print(maxCli, mult, ceil)
             #             # genAllSliConfigsHTBRun(studyName+'-maxCli'+str(maxCli)+'_R'+str(int(rate))+'_Q'+str(int(qoE*10))+'_M'+str(int(mult*100))+'_C'+str(int(ceil*100))+'_P'+str(dp), 'liteCbaselineTestTokenQoS_base', rate, qoE, [client], [[client]], ['connFIX0'], maxCli, defaultNumClients, ceil, mult, dp)
             #             counter += 1
-            print("rate:" + str(rate))
+            #print("rate:" + str(rate))
             for mult in assuredMulti:
                 maxCli = int(defaultNumClients/mult)
                 for dp in dPrio:
