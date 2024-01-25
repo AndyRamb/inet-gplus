@@ -60,6 +60,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
         long long burstSize = 0;
         long long cburstSize = 0;
 
+        std::list<int> rates;
+
         int quantum = 0;
         long long mbuffer = 0;
 

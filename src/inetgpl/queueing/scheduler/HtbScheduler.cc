@@ -75,24 +75,25 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     newClass->name = oneClass->get("id").stringValue();
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
     
-
-
-    //Making a linked list with the rate changes if the value exists use that, if not use last value
-    for (int i = 1; i > -1; i--) {
+    for (int i = 1; i < 2; i++) {
         std::ostringstream oss;
-        oss << 'rate' << i;
-        char* x=new char[oss.str().length()+1];
-        if (!oneClass->get(x).isNullptr()) {
-            //long long newRate = oneClass->get('rate'+ to_string(i)).intValue() * 1e3;
-            
+        oss << i;
+        char *x= "rate";
+        std::strcat(x,oss.str());
+        std::cout << i << "," << x << "," <<oneClass->get(x).intValue()*1e3 << endl;
+        //std::cout << "test" << endl; //oneClass->get(x).intValue() * 1e3 << endl;
+        //if (!oneClass->get(x).isNullptr()) {
+        //    long long newRate = oneClass->get(x).intValue() * 1e3;
+        //    std::cout << i << "," << x << "," << newRate << endl;
+            //newClass->rates.push_back(newRate)
             //while (last->next != NULL) {
             //    last = last->next;
             //}
 
             //newRate->next = NULL;
             //last->next = newRate;
-        }   
-        else {
+        //}   
+        //else {
             //while (last->next != NULL) {
             //    last = last->next;
             //}
@@ -100,7 +101,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
 
             //newRate->next = NULL;
             //last->next = newRate;
-        }
+        //}
     }
 
 
@@ -172,7 +173,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
 
     newClass->burstSize = burst;
-    std::cout << "this should only be printed 5 times" << endl;
+    //std::cout << "this should only be printed 5 times" << endl;
     newClass->cburstSize = cburst;
     int level = oneClass->get("level").intValue(); // Level in the tree structure. 0 = LEAF!!!
     newClass->level = level;
@@ -285,10 +286,8 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
 
 void HtbScheduler::initialize(int stage)
 {
-    std::cout << "Outer initialize" << endl;
     PacketSchedulerBase::initialize(stage); // Initialize the packet scheduler module
     if (stage == INITSTAGE_LOCAL) {
-        std::cout << "Inner initialize local" << stage << endl;
         mtu = par("mtu");
         phyHeaderSize = par("phyLayerHeaderLength");
         valueCorectnessCheck = par("checkHTBTreeValuesForCorectness");
@@ -337,7 +336,7 @@ void HtbScheduler::initialize(int stage)
          //TODO: continue this:
         scaleBucketEvent = new cMessage("timeToScaleBucket");
         //scaleBucketEvent->addObject(newClass->assignedRate);
-        scheduleAt(4, scaleBucketEvent);
+        scheduleAt(2, scaleBucketEvent);
 
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
