@@ -3,6 +3,7 @@
         "id":"root",
         "parentId": "NULL",
         "rate": 50000,
+        "rate1": 50000,
         "ceil": 50000,
         "burst": 2000,
         "cburst": 2000,

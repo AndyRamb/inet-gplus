@@ -76,32 +76,34 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
     
     for (int i = 1; i < 2; i++) {
-        std::ostringstream oss;
-        oss << i;
-        char *x= "rate";
-        std::strcat(x,oss.str());
-        std::cout << i << "," << x << "," <<oneClass->get(x).intValue()*1e3 << endl;
+        char x[10];
+        std::sprintf(x, "%d", i);
+        char r[10] = "rate";
+        std:strcat(r,x);
+        //std::strcat(x,oss.str());
+        
         //std::cout << "test" << endl; //oneClass->get(x).intValue() * 1e3 << endl;
-        //if (!oneClass->get(x).isNullptr()) {
-        //    long long newRate = oneClass->get(x).intValue() * 1e3;
-        //    std::cout << i << "," << x << "," << newRate << endl;
-            //newClass->rates.push_back(newRate)
+        if (!oneClass->get(r).isNullptr()) {
+            //std::cout << r << ": " <<oneClass->get(r).intValue() << endl;
+            long long newRate = oneClass->get(r).intValue() * 1e3;
+            
+            newClass->rates.push_back(newRate);
             //while (last->next != NULL) {
             //    last = last->next;
             //}
 
             //newRate->next = NULL;
             //last->next = newRate;
-        //}   
-        //else {
+        }   
+        else {
+            std::cout << "needs to add copy of last" << endl;
             //while (last->next != NULL) {
             //    last = last->next;
             //}
             //long long newRate = last->assignedRate;
-
             //newRate->next = NULL;
             //last->next = newRate;
-        //}
+        }
     }
 
 
@@ -336,7 +338,7 @@ void HtbScheduler::initialize(int stage)
          //TODO: continue this:
         scaleBucketEvent = new cMessage("timeToScaleBucket");
         //scaleBucketEvent->addObject(newClass->assignedRate);
-        scheduleAt(2, scaleBucketEvent);
+        scheduleAt(5, scaleBucketEvent);
 
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
@@ -377,10 +379,13 @@ void HtbScheduler::handleMessage(cMessage *message)
     else if (message == scaleBucketEvent ) {
         std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
         for (auto & cl : leafClasses) {
-            std::cout << cl->assignedRate << " " << endl;
+            std::cout << cl->rates.front() << " " << endl;
+            scaleBucket(cl, cl->rates.front());
+            cl->rates.pop_front();
 
             //cl->assignedRate = assignedRate->nextRate
         }
+        //scheduleAt(3, scaleBucketEvent);
     }
     else
         throw cRuntimeError("Unknown self message");
@@ -940,10 +945,10 @@ void HtbScheduler::updateClassMode(htbClass *cl, long long *diff)
         emit(cl->classMode, cl->mode);
     }
 }
-void HtbScheduler::scaleBucket(htbClass *cl, double k){
-    std::cout << cl->name << " before: " << cl->ceilingRate;
-    cl->ceilingRate*= k;
-    std::cout << " after: " << cl->ceilingRate<< endl;
+void HtbScheduler::scaleBucket(htbClass *cl, long long rar){
+    std::cout << cl->name << " before: " << cl->assignedRate << endl;
+    cl->assignedRate = rar;
+    std::cout << " after: " << cl->assignedRate<< endl;
 }
 void HtbScheduler::accountTokens(htbClass *cl, long long bytes, long long diff) {
 

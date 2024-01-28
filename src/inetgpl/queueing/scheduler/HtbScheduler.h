@@ -145,6 +145,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     std::vector<htbClass*> innerClasses; // Inner classes saved here for ease of access
     std::vector<htbClass*> leafClasses; // Leaf classes saved here for ease of access
 
+    std::list<int> changeTimes;
+
     cMessage *classModeChangeEvent = nullptr;
     cMessage *scaleBucketEvent = nullptr;
 
@@ -184,7 +186,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     inline long htb_lowater(htbClass *cl);
 
     void updateClassMode(htbClass *cl, long long *diff);
-    void scaleBucket(htbClass *cl, double k);
+    void scaleBucket(htbClass *cl, long long rar);
     void accountTokens(htbClass *cl, long long bytes, long long diff);
     void accountCTokens(htbClass *cl, long long bytes, long long diff);
     void chargeClass(htbClass *leafCl, int borrowLevel, Packet *packetToDequeue);

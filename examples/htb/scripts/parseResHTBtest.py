@@ -44,7 +44,7 @@ def makeNodeIdentifier(nodeType, nodeNum):
 def importDF(testName, numCLI, nodeTypes, nodeSplit, nodeType, nodeNum):
     # File that will be read
     fullScenarioExportName = makeFullScenarioName(testName, numCLI, nodeTypes, nodeSplit)
-    fileToRead = str(testName) + '/' + fullScenarioExportName + '/vectors/' + fullScenarioExportName + '_' + makeNodeIdentifier(nodeType, nodeNum) + '_vec.csv'
+    fileToRead = '../results/' + str(testName) + '/' + fullScenarioExportName + '/vectors/' + fullScenarioExportName + '_' + makeNodeIdentifier(nodeType, nodeNum) + '_vec.csv'
     # '../' + ^^^
     print("Importing: " + fileToRead)
     # Read the CSV
@@ -155,8 +155,8 @@ def extractNodeTPperSecond(testName, numCLI, nodeTypes, nodeSplit, nodeName, nod
     ax1.set_ylabel('Throughput [Mbit/s]')
     ax1.set_xlabel('Simulation Time [s]')
     ax1.set_xlim(0,20)
-    fig.savefig( './'+str(testName)+'/'+str(testName)+'_tps1s.png', dpi=100, bbox_inches='tight')
-    fig.savefig( './'+str(testName)+'/'+str(testName)+'_tps1s.pdf', dpi=100, bbox_inches='tight')
+    fig.savefig( '../results/'+str(testName)+'/'+str(testName)+'_tps1s.png', dpi=100, bbox_inches='tight')
+    fig.savefig( '../results/'+str(testName)+'/'+str(testName)+'_tps1s.pdf', dpi=100, bbox_inches='tight')
     plt.close('all')
     # df1 = getFilteredDFtypeAndTS(df, 'rxPkOk')
     # df1 = getFilteredDFtypeAndTS(df, 'txPk')
@@ -211,8 +211,8 @@ def extractNodeE2ED(testName, numCLI, nodeTypes, nodeSplit, nodeName, nodeNum, n
     plt.grid()
     ax1.set_ylabel('End-To-End Delay [s]')
     ax1.set_xlabel('Simulation Time [s]')
-    fig.savefig( './' +str(testName)+'/'+str(testName)+'_delay.png', dpi=100, bbox_inches='tight')
-    fig.savefig( './' +str(testName)+'/'+str(testName)+'_delay.pdf', dpi=100, bbox_inches='tight')
+    fig.savefig( '../results/' +str(testName)+'/'+str(testName)+'_delay.png', dpi=100, bbox_inches='tight')
+    fig.savefig( '../results/' +str(testName)+'/'+str(testName)+'_delay.pdf', dpi=100, bbox_inches='tight')
     plt.close('all')
 
 # extractNodeTPperSecond("htbTest1", 15, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [0,0,15,0,0], 'hostFDO', 1)
@@ -236,7 +236,7 @@ def plotNodesMA(testName, numCLI, nodeTypes, nodeSplit, nodeName, numNodes):
     plt.grid()
     ax1.set_ylabel('Throughput [kbps]')
     ax1.set_xlabel('Simulation Time [s]')
-    fig.savefig( './' +str(testName)+'/'+str(testName)+'_tpsMA.pdf', dpi=100, bbox_inches='tight')
+    fig.savefig( '../results/' +str(testName)+'/'+str(testName)+'_tpsMA.pdf', dpi=100, bbox_inches='tight')
     plt.close('all')
 
 def plotNodes1s(testName, numCLI, nodeTypes, nodeSplit, nodeName, numNodes,numApps):

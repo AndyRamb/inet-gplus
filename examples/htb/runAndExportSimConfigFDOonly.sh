@@ -65,7 +65,7 @@ opp_run -m -u Cmdenv -c ${config} -n ../../src:..:../../../../Downloads/omnetpp-
 # opp_runall -j1 -b1 opp_run ${iniFile} -u Cmdenv -c ${config} -m -n .:../src:../../../../../inet4/src:../../../../../inet4/examples:../../../../../inet4/tutorials:../../../../../inet4/showcases -l ../../../../../inet4/src/INET 2>&1 | tee ${config}.txt # Vagrant 2
 
 ###### Export results from OMNet++ to csv ######
-cd scripts
+cd results
 #######
 ./export_results_individual_NS_onlyFDO.sh -f 0 -l 0 -r ${slices} -s ${config} -o ${config} -t ${config} -d ${config}
 
@@ -73,10 +73,10 @@ cd scripts
 # ./export_results_individual_NS_onlyR1Queues.sh -f 0 -l 0 -r ${slices} -s ${config} -o ../../../analysis/${config} -t ${config} -d ${config}
 
 ###### Extract necessary information from the csv's ######
-cd ../results
+#cd ../results
 cd ${config}
 name=$(ls -d */)
-cd ../scripts
+cd ../../scripts
 python3 parseResHTBtest.py ${config} ${slices} ${name} ${nApps}
 #python3 parseResHTBtest.py scenarioUDP1 0 scenarioUDP1_1_VID0_LVD0_FDO1_SSH0_VIP0 5
 # python3 parseResNE.py ${config} ${slices} ${name} # Extract required information from the scavetool csv's
