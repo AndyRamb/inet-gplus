@@ -75,7 +75,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     newClass->name = oneClass->get("id").stringValue();
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
     
-    for (int i = 1; i < 2; i++) {
+    for (int i = 1; i < 3; i++) {
         char x[10];
         std::sprintf(x, "%d", i);
         char r[10] = "rate";
@@ -86,27 +86,12 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
         if (!oneClass->get(r).isNullptr()) {
             //std::cout << r << ": " <<oneClass->get(r).intValue() << endl;
             long long newRate = oneClass->get(r).intValue() * 1e3;
-            
             newClass->rates.push_back(newRate);
-            //while (last->next != NULL) {
-            //    last = last->next;
-            //}
-
-            //newRate->next = NULL;
-            //last->next = newRate;
         }   
         else {
-            std::cout << "needs to add copy of last" << endl;
-            //while (last->next != NULL) {
-            //    last = last->next;
-            //}
-            //long long newRate = last->assignedRate;
-            //newRate->next = NULL;
-            //last->next = newRate;
+            newClass->rates.push_back(newClass->rates.back());
         }
     }
-
-
 
     // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
     long long rate = oneClass->get("rate").intValue() * 1e3;
@@ -307,7 +292,7 @@ void HtbScheduler::initialize(int stage)
         // Load configs
         cValueArray *classes = check_and_cast<cValueArray *>(par("htbTreeConfig").objectValue());
         htb_hysteresis = par("htbHysterisis");
-
+        
 
         // Create all classes and build the tree structure
         //cObject *c = htbConfig->objectValue();
@@ -335,14 +320,19 @@ void HtbScheduler::initialize(int stage)
 
         classModeChangeEvent = new cMessage("probablyClassNotRedEvent"); // Omnet++ event to take action when new elements to dequeue are available
 
-         //TODO: continue this:
+         //ScaleBucketTimes needs to only runs once. Init happens for both host and server... how to deal with this?
         scaleBucketEvent = new cMessage("timeToScaleBucket");
-        //scaleBucketEvent->addObject(newClass->assignedRate);
-        scheduleAt(5, scaleBucketEvent);
+
+        std::vector<intval_t> temp = check_and_cast<cValueArray *>(par("changeTimes").objectValue())->asIntVector();
+        for (int n : temp){
+            changeTimes.push_back(n);
+        }
+        std::cout << changeTimes.front() << endl;
+        scheduleAt(changeTimes.front(), scaleBucketEvent);
+        changeTimes.pop_front();
 
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
-        std::cout << "Inner initialize initStageNetworkInterfaceConfig" << endl;
         EV_INFO << "Get link datarate" << endl;
         auto iface = getContainingNicModule(this);
         linkDatarate = iface->getTxTransmissionChannel()->getNominalDatarate();
@@ -385,7 +375,10 @@ void HtbScheduler::handleMessage(cMessage *message)
 
             //cl->assignedRate = assignedRate->nextRate
         }
-        //scheduleAt(3, scaleBucketEvent);
+        if (!changeTimes.empty()){
+            scheduleAt(changeTimes.front(), scaleBucketEvent);
+            changeTimes.pop_front();
+        }
     }
     else
         throw cRuntimeError("Unknown self message");

@@ -49,6 +49,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     int phyHeaderSize;
     bool valueCorectnessCheck;
     bool valueCorectnessAdj;
+    bool readChangeTimes;
 
     int lastGlobalIdUsed = 0;
 

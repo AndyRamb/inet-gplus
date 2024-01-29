@@ -18,6 +18,7 @@ simple HtbScheduler extends PacketSchedulerBase like IPacketScheduler
 {
     parameters:
         object htbTreeConfig; // The htb tree structure
+        object changeTimes = default([]);
 
         bool htbHysterisis = default(false);
 
