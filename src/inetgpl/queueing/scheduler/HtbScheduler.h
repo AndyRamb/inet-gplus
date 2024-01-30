@@ -176,7 +176,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     void printClass(htbClass *cl);
     void printLevel(htbLevel *level, int index);
     void printInner(htbClass *cl);
-    htbClass *createAndAddNewClass(cValueMap* oneClass, int queueId);
+    htbClass *createAndAddNewClass(cValueMap* oneClass, int queueId, int numRates);
     void activateClass(htbClass *cl, int priority);
     void deactivateClass(htbClass *cl, int priority);
 

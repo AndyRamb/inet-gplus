@@ -12,8 +12,8 @@ def clientAdmission(clients):
         configString += '*.hostFDO[*].app['+ str(a) +'].stopTime = ' + str(endTime[a]) + 's\n'
 
     changeTimes = numpy.unique(numpy.concatenate((startTime, endTime), axis=None))
-
-    print(changeTimes)
+    #print ', '.join(changeTimes)
+    configString += ".hostFDO[0].ppp[0].queue.scheduler.changeTimes = [" + ', '.join(str(c) for c in changeTimes) + "]\n"
 
     for t in changeTimes:
         for a in app:

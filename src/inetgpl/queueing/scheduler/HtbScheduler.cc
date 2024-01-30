@@ -62,7 +62,7 @@ void HtbScheduler::printClass(htbClass *cl)
 }
 
 // Gets information from XML config, creates a class (leaf/inner/root) and correctly adds it to tree structure
-HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, int queueId)
+HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, int queueId, int numRates)
 {
     // Create class, set its name and parents' name
     htbClass* newClass = new htbClass();
@@ -75,7 +75,12 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     newClass->name = oneClass->get("id").stringValue();
     const char* parentName = oneClass->get("parentId").stringValue(); //Todo can this be static 0?
     
-    for (int i = 1; i < 3; i++) {
+    // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
+    long long rate = oneClass->get("rate").intValue() * 1e3;
+    //std::cout << oneClass->get("rate").intValue() << endl;
+    newClass->assignedRate = rate;
+
+    for (int i = 1; i < numRates+1; i++) {
         char x[10];
         std::sprintf(x, "%d", i);
         char r[10] = "rate";
@@ -83,20 +88,20 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
         //std::strcat(x,oss.str());
         
         //std::cout << "test" << endl; //oneClass->get(x).intValue() * 1e3 << endl;
-        if (!oneClass->get(r).isNullptr()) {
+        if (oneClass->containsKey(r)) {
             //std::cout << r << ": " <<oneClass->get(r).intValue() << endl;
             long long newRate = oneClass->get(r).intValue() * 1e3;
             newClass->rates.push_back(newRate);
         }   
+        else if (i == 1){
+            newClass->rates.push_back(rate);
+        }
         else {
             newClass->rates.push_back(newClass->rates.back());
         }
     }
 
-    // Configure class settings - rate, ceil, burst, cburst, quantum, etc.
-    long long rate = oneClass->get("rate").intValue() * 1e3;
-    //std::cout << oneClass->get("rate").intValue() << endl;
-    newClass->assignedRate = rate;
+   
     long long ceil = oneClass->get("ceil").intValue() * 1e3;
     newClass->ceilingRate = ceil;
 
@@ -292,6 +297,15 @@ void HtbScheduler::initialize(int stage)
         // Load configs
         cValueArray *classes = check_and_cast<cValueArray *>(par("htbTreeConfig").objectValue());
         htb_hysteresis = par("htbHysterisis");
+
+        //ScaleBucketTimes needs to only runs once. Init happens for both host and server... how to deal with this?
+        scaleBucketEvent = new cMessage("timeToScaleBucket");
+
+        std::vector<intval_t> temp = check_and_cast<cValueArray *>(par("changeTimes").objectValue())->asIntVector();
+        for (int n : temp){
+            changeTimes.push_back(n);
+        }
+        std::cout << changeTimes.front() << endl;
         
 
         // Create all classes and build the tree structure
@@ -303,8 +317,13 @@ void HtbScheduler::initialize(int stage)
         //}
         for (int i=0; i< classes->size(); i++) {
             cValueMap *oneClass = check_and_cast<cValueMap *>(classes->get(i).objectValue());
-            htbClass* newClass = createAndAddNewClass(oneClass, 0);
+            htbClass* newClass = createAndAddNewClass(oneClass, 0, changeTimes.size());
             printClass(newClass);
+        }
+
+        if (!changeTimes.empty()){
+            scheduleAt(changeTimes.front(), scaleBucketEvent);
+            changeTimes.pop_front();
         }
         //htbConfig->forEachChild(oneClass){
         //    htbClass* newClass = createAndAddNewClass(oneClass, 0);
@@ -319,18 +338,6 @@ void HtbScheduler::initialize(int stage)
         }
 
         classModeChangeEvent = new cMessage("probablyClassNotRedEvent"); // Omnet++ event to take action when new elements to dequeue are available
-
-         //ScaleBucketTimes needs to only runs once. Init happens for both host and server... how to deal with this?
-        scaleBucketEvent = new cMessage("timeToScaleBucket");
-
-        std::vector<intval_t> temp = check_and_cast<cValueArray *>(par("changeTimes").objectValue())->asIntVector();
-        for (int n : temp){
-            changeTimes.push_back(n);
-        }
-        std::cout << changeTimes.front() << endl;
-        scheduleAt(changeTimes.front(), scaleBucketEvent);
-        changeTimes.pop_front();
-
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
         EV_INFO << "Get link datarate" << endl;
