@@ -105,9 +105,33 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
     long long ceil = oneClass->get("ceil").intValue() * 1e3;
     newClass->ceilingRate = ceil;
 
+    for (int i = 1; i < numRates+1; i++) {
+        char x[10];
+        std::sprintf(x, "%d", i);
+        char r[10] = "ceil";
+        std::strcat(r,x);
+        //std::strcat(x,oss.str());
+        
+        //std::cout << "test" << endl; //oneClass->get(x).intValue() * 1e3 << endl;
+        if (oneClass->containsKey(r)) {
+            //std::cout << r << ": " <<oneClass->get(r).intValue() << endl;
+            long long newCeil = oneClass->get(r).intValue() * 1e3;
+            newClass->ceils.push_back(newCeil);
+        }   
+        else if (i == 1){
+            newClass->ceils.push_back(ceil);
+        }
+        else {
+            newClass->ceils.push_back(newClass->ceils.back());
+        }
+    }
+
+    if (linkDatarate == -1) {
+        throw cRuntimeError("Link datarate was -1!");
+    }
+
     // The user has an option to configure burst/cburst manually, or it can be configured automatically
     long long burstTemp = 0;
-    long long cburstTemp = 0;
     if (!oneClass->get("burst").isNullptr()) {
         burstTemp = oneClass->get("burst").intValue(); // Burst specified in Bytes
         std::cout << oneClass <<endl;
@@ -125,6 +149,10 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
         burstTemp = std::max(rate / 8000, mtu);
         EV_INFO << "User did not specify burst. Configuring automatically to: " << burstTemp << " Bytes." << endl;
     }
+    long long burst = getBurst(burstTemp, rate);
+    newClass->burstSize = burst;
+
+    long long cburstTemp = 0;
     if (!oneClass->get("cburst").isNullptr()) {
         cburstTemp = oneClass->get("cburst").intValue(); // Cburst specified in Bytes
         if (cburstTemp < mtu) {
@@ -141,32 +169,9 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
         cburstTemp = std::max(ceil / 8000, mtu);
         EV_INFO << "User did not specify cburst. Configuring automatically to: " << cburstTemp << " Bytes." << endl;
     }
-
-    if (linkDatarate == -1) {
-        throw cRuntimeError("Link datarate was -1!");
-    }
-
-    // https://patchwork.ozlabs.org/project/netdev/patch/200901221145.57856.denys@visp.net.lb/ -> Defines that burst/cburst should be at least mtu + 1ms worth of sending at rate/ceil
-    // Determine and calculate the burstSize and cburstSize
-    long long burstChosen = burstTemp;
-    long long cburstChosen = cburstTemp;
-    if (valueCorectnessAdj == true) {
-        if (burstTemp < rate / 8000) {
-            burstChosen = std::max(burstTemp, rate / 8000); // Burst should not be smaller than mtu + 1ms worth of sending at rate
-            EV_WARN << "Burst adjusted to " << burstChosen << "Bytes" << endl;
-        }
-        if (cburstTemp < ceil / 8000) {
-            cburstChosen = std::max(cburstTemp, ceil / 8000); // Cburst should not be smaller than mtu + 1ms worth of sending at ceil
-            EV_WARN << "Cburst adjusted to " << cburstChosen << "Bytes" << endl;
-        }
-    }
-
-    long long burst = (((long long) burstChosen * 8 * 1e+9)/(long long)rate);
-    long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
-
-    newClass->burstSize = burst;
-    //std::cout << "this should only be printed 5 times" << endl;
+    long long cburst = getCBurst(cburstTemp, ceil);
     newClass->cburstSize = cburst;
+
     int level = oneClass->get("level").intValue(); // Level in the tree structure. 0 = LEAF!!!
     newClass->level = level;
     int quantum = oneClass->get("quantum").intValue();
@@ -275,7 +280,32 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
 
     return newClass;
 }
-
+int HtbScheduler::getBurst(long long burstTemp,long long rate){
+    // https://patchwork.ozlabs.org/project/netdev/patch/200901221145.57856.denys@visp.net.lb/ -> Defines that burst/cburst should be at least mtu + 1ms worth of sending at rate/ceil
+    // Determine and calculate the burstSize and cburstSize
+    long long burstChosen = burstTemp;
+    if (valueCorectnessAdj == true) {
+        if (burstTemp < rate / 8000) {
+            burstChosen = std::max(burstTemp, rate / 8000); // Burst should not be smaller than mtu + 1ms worth of sending at rate
+            EV_WARN << "Burst adjusted to " << burstChosen << "Bytes" << endl;
+        }
+    }
+    long long burst = (((long long) burstChosen * 8 * 1e+9)/(long long)rate);
+    return burst;
+}
+int HtbScheduler::getCBurst(long long cburstTemp, long long ceil){
+    // https://patchwork.ozlabs.org/project/netdev/patch/200901221145.57856.denys@visp.net.lb/ -> Defines that burst/cburst should be at least mtu + 1ms worth of sending at rate/ceil
+    // Determine and calculate the burstSize and cburstSize
+    long long cburstChosen = cburstTemp;
+    if (valueCorectnessAdj == true) {
+        if (cburstTemp < ceil / 8000) {
+            cburstChosen = std::max(cburstTemp, ceil / 8000); // Cburst should not be smaller than mtu + 1ms worth of sending at ceil
+            EV_WARN << "Cburst adjusted to " << cburstChosen << "Bytes" << endl;
+        }
+    }
+    long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
+    return cburst;
+}
 void HtbScheduler::initialize(int stage)
 {
     PacketSchedulerBase::initialize(stage); // Initialize the packet scheduler module
@@ -306,8 +336,19 @@ void HtbScheduler::initialize(int stage)
             changeTimes.push_back(n);
         }
         std::cout << changeTimes.front() << endl;
-        
 
+        for (int i=0; i< classes->size(); i++) {
+            cValueMap *oneClass = check_and_cast<cValueMap *>(classes->get(i).objectValue());
+            htbClass* newClass = createAndAddNewClass(oneClass, 0, changeTimes.size());
+            printClass(newClass);
+        }
+        if (!changeTimes.empty()){
+            scheduleAt(changeTimes.front(), scaleBucketEvent);
+            changeTimes.pop_front();
+        }
+
+
+        
         // Create all classes and build the tree structure
         //cObject *c = htbConfig->objectValue();
         //cValueArray *classes = htbConfig.objectValue();
@@ -315,16 +356,6 @@ void HtbScheduler::initialize(int stage)
         //    htbClass* newClass = createAndAddNewClass(oneClass, 0);
         //    printClass(newClass);
         //}
-        for (int i=0; i< classes->size(); i++) {
-            cValueMap *oneClass = check_and_cast<cValueMap *>(classes->get(i).objectValue());
-            htbClass* newClass = createAndAddNewClass(oneClass, 0, changeTimes.size());
-            printClass(newClass);
-        }
-
-        if (!changeTimes.empty()){
-            scheduleAt(changeTimes.front(), scaleBucketEvent);
-            changeTimes.pop_front();
-        }
         //htbConfig->forEachChild(oneClass){
         //    htbClass* newClass = createAndAddNewClass(oneClass, 0);
         //    printClass(newClass);
@@ -374,12 +405,23 @@ void HtbScheduler::handleMessage(cMessage *message)
         CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
     }
     else if (message == scaleBucketEvent ) {
-        std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
+        //std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
         for (auto & cl : leafClasses) {
-            std::cout << cl->rates.front() << " " << endl;
-            scaleBucket(cl, cl->rates.front());
+
+            //long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
+
+            long long newRate = cl->rates.front();
+            long long newBurst = getBurst(1600, newRate); // Alt value: (cl->burstSize*cl->assignedRate/8/1e+9)
+            cl->burstSize = newBurst;
+            cl->assignedRate = newRate;
             cl->rates.pop_front();
 
+            long long newCeil = cl->ceils.front();
+            long long newCBurst = getCBurst(1600, newCeil); // Alt value: (cl->cburstSize*cl->ceilingRate/8/1e+9)
+            cl->cburstSize = newCBurst;
+            cl->ceilingRate = cl->ceils.front();
+            cl->ceils.pop_front();
+            
             //cl->assignedRate = assignedRate->nextRate
         }
         if (!changeTimes.empty()){
@@ -944,11 +986,6 @@ void HtbScheduler::updateClassMode(htbClass *cl, long long *diff)
         cl->mode = newMode;
         emit(cl->classMode, cl->mode);
     }
-}
-void HtbScheduler::scaleBucket(htbClass *cl, long long rar){
-    std::cout << cl->name << " before: " << cl->assignedRate << endl;
-    cl->assignedRate = rar;
-    std::cout << " after: " << cl->assignedRate<< endl;
 }
 void HtbScheduler::accountTokens(htbClass *cl, long long bytes, long long diff) {
 

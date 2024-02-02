@@ -75,9 +75,9 @@
 	{
         "id":"leafhostFDO4",
         "parentId": "root",
-        "rate": 15000,
-        "rate1": 7500,
-        "rate2": 15000,
+        "rate": 0,
+        "rate1": 15000,
+        "rate2": 0,
         "ceil": 40000,
         "burst": 2000,
         "cburst": 2000,

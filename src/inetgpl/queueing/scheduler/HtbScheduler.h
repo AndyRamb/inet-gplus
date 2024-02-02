@@ -61,7 +61,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
         long long burstSize = 0;
         long long cburstSize = 0;
 
-        std::list<int> rates;
+        std::list<long long> rates;
+        std::list<long long> ceils;
 
         int quantum = 0;
         long long mbuffer = 0;
@@ -146,7 +147,7 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     std::vector<htbClass*> innerClasses; // Inner classes saved here for ease of access
     std::vector<htbClass*> leafClasses; // Leaf classes saved here for ease of access
 
-    std::list<int> changeTimes;
+    std::list<int> changeTimes; //Times of when to change parameters here
 
     cMessage *classModeChangeEvent = nullptr;
     cMessage *scaleBucketEvent = nullptr;
@@ -177,6 +178,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     void printLevel(htbLevel *level, int index);
     void printInner(htbClass *cl);
     htbClass *createAndAddNewClass(cValueMap* oneClass, int queueId, int numRates);
+    int getBurst(long long burstTemp, long long rate);
+    int getCBurst(long long cburstTemp, long long ceil);
     void activateClass(htbClass *cl, int priority);
     void deactivateClass(htbClass *cl, int priority);
 
