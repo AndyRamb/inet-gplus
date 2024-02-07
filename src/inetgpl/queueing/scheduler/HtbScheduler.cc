@@ -416,6 +416,9 @@ void HtbScheduler::handleMessage(cMessage *message)
             cl->assignedRate = newRate;
             cl->rates.pop_front();
 
+            // TODO: collections[cl->leaf.queueId]->removeAllPackets() if 0
+
+
             long long newCeil = cl->ceils.front();
             long long newCBurst = getCBurst(1600, newCeil); // Alt value: (cl->cburstSize*cl->ceilingRate/8/1e+9)
             cl->cburstSize = newCBurst;
