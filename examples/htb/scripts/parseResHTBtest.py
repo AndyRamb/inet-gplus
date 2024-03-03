@@ -6,8 +6,9 @@ import sys
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 
-maxSimTime = 15
+maxSimTime = 20
 DEBUG = 0
 
 font = {'weight' : 'normal',
@@ -29,6 +30,8 @@ def makeFullScenarioName(testName, numCLI, nodeTypes, nodeSplit):
 
 def makeNodeIdentifier(nodeType, nodeNum):
     if nodeNum < 0:
+        return nodeType
+    elif nodeType == "serverFDO":
         return nodeType
     else:
         return nodeType + str(nodeNum)
@@ -75,7 +78,7 @@ def calculateThrougputPerSecondDirection(dirDF, nodeIdent, appIndent):
     colName = 'Throughput ' + nodeIdent + appIndent
     tpDirDF = pandas.DataFrame(columns=[colName])
     print(tB)
-    while tB[1] <= maxSimTime:
+    while tB[0] <= maxSimTime:
         if DEBUG: print(tB, end =" -> Throughput: ")
         #throughput = dirDF.loc[(dirDF['ts'] > tB[0]) & (dirDF['ts'] <= tB[1])]["bytes"].sum()
         # throughput = sum([x + 47 for x in dirDF.loc[(dirDF['ts'] > tB[0]) & (dirDF['ts'] <= tB[1])]["bytes"].tolist()])
@@ -132,22 +135,22 @@ def extractNodeTPperSecond(testName, numCLI, nodeTypes, nodeSplit, nodeName, nod
         else:
             labl = ' Flow ' + str(i)
             sumTP = [x+y for x,y in zip(sumTP, tempTPs)]
-            if i == 2 and 'scenario2' in testName:
+            if i == 2 and 'Slices' in testName:
                 sumTP1 = sumTP
-            if i == 3 and 'scenario2' in testName:
+            if i == 3 and 'Slices' in testName:
                 sumTP2 = tempTPs
                 mrkr='s'
-            if i > 3 and 'scenario2' in testName:
+            if i > 3 and 'Slices' in testName:
                 sumTP2 = [x+y for x,y in zip(sumTP2, tempTPs)]
                 mrkr='s'
         ax1.plot(times, tempTPs, marker=mrkr, linestyle='-', label=labl, alpha=0.8, zorder=100)
-    if 'scenario2' in testName:
+    if 'Slices' in testName:
         ax1.plot(times, sumTP1, marker='o', linestyle='dashed', label='Inner 1', color='grey', alpha=0.9, zorder=80, markersize=14)
         ax1.plot(times, sumTP2, marker='s', linestyle='dashed', label='Inner 2', color='darkgrey', alpha=0.9, zorder=85, markersize=14)
     ax1.plot(times, sumTP, 'X--', label='Sum', alpha=1, zorder=10, markersize=18, color='k')
     if "scenario1" in testName:
         plt.legend(loc="center", bbox_to_anchor=(0.5,0.65)).set_zorder(150)
-    elif "scenario2" in testName:
+    elif "Slices" in testName:
         plt.legend(loc="center", bbox_to_anchor=(0.5,0.775), ncol=2).set_zorder(150)
     else:
         plt.legend(loc="upper right").set_zorder(150)
@@ -300,8 +303,27 @@ def plotNodes1s(testName, numCLI, nodeTypes, nodeSplit, nodeName, numNodes,numAp
 # 	fig.savefig( '../exports/plots/htbTests/'+str(testName)+'_tps1s.png', dpi=100, bbox_inches='tight')
 # 	plt.close('all')
 
+def plotQueueLength(testName, numCLI, nodeTypes, nodeSplit, nodeName, nodeNum, numApps):
+    fig, ax1 = plt.subplots(1, figsize=(26,16))
+    df = importDF(testName, numCLI, nodeTypes, nodeSplit, nodeName, nodeNum)
 
-# queueLength:vector htbEvaluation.serverFDO.ppp[0].ppp.queue.queue[1]
+    for i in range(0, numApps):
+        print('queueLength:vector htbEvaluation.serverFDO.ppp[0].ppp.queue.queue[' + str(i) + ']')
+        df1 = getFilteredDFtypeAndTS(df, 'queueLength:vector htbEvaluation.serverFDO.ppp[0].queue.queue['+str(i)+']')
+        #df1.rename(columns={str(df1.columns[0]) : "ts", str(df1.columns[1]) : "queueLength"})
+        tmp = np.flipud(np.rot90(df1.to_numpy()))
+        print(tmp[0])
+        labl = 'Flow ' + str(i)
+        ax1.plot(tmp[0], tmp[1], label=labl, alpha=0.7, linewidth=10)
+	# ax1.plot(times, sumTP, label='Sum', alpha=0.8)
+    plt.legend(loc="upper right")
+    plt.grid()
+    ax1.set_ylabel('QueueLength')
+    ax1.set_xlabel('Simulation Time [s]')
+    fig.savefig( '../results/' +str(testName)+'/'+str(testName)+'_queueLength.png', dpi=100, bbox_inches='tight')
+    plt.close('all')
+
+# queueLength:vector htbEvaluation.serverFDO.ppp[0].ppp.queue.queue[*]
 # plotNodes1s("htbTest2c", 15, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [0,0,15,0,0], 'resAllocLink', 1)
 
 # plotNodes("htbTest1", 15, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [0,0,15,0,0], 'hostFDO', 15)
@@ -331,3 +353,5 @@ if __name__ == "__main__":
     plotNodes1s(sys.argv[1], numCLI, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [numVID, numLVD, numFDO, numSSH, numVIP], 'hostFDO', 0, int(sys.argv[4]))
     print(numFDO)
     extractNodeE2ED(sys.argv[1], numCLI, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [numVID, numLVD, numFDO, numSSH, numVIP], 'hostFDO', 0, int(sys.argv[4]))
+    print(numFDO)
+    plotQueueLength(sys.argv[1], numCLI, ['hostVID', 'hostLVD', 'hostFDO', 'hostSSH', 'hostVIP'], [numVID, numLVD, numFDO, numSSH, numVIP], 'serverFDO', 0, int(sys.argv[4]))

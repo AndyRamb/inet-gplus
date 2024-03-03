@@ -405,7 +405,7 @@ void HtbScheduler::handleMessage(cMessage *message)
         CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
     }
     else if (message == scaleBucketEvent ) {
-        std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
+        //std::cout << "Hello from scalebucketEvent: " << scaleBucketEvent << endl;
         for (auto & cl : leafClasses) {
 
             //long long cburst = (((long long) cburstChosen * 8 * 1e+9)/(long long)ceil);
