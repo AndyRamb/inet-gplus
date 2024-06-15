@@ -84,7 +84,7 @@ HtbScheduler::htbClass *HtbScheduler::createAndAddNewClass(cValueMap *oneClass, 
         char x[10];
         std::sprintf(x, "%d", i);
         char r[10] = "rate";
-        std:strcat(r,x);
+        std::strcat(r,x);
         //std::strcat(x,oss.str());
         
         //std::cout << "test" << endl; //oneClass->get(x).intValue() * 1e3 << endl;

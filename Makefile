@@ -15,8 +15,8 @@ cleanall: checkmakefiles
 	@rm -f src/Makefile $(FEATURES_H)
 
 
-INET_PROJ = $(shell inet_root)
-INETGPL_PROJ = $(shell inetgpl_root)
+INET_PROJ = /home/akramber/Omnet/omnetpp-6.0.2/Master/inet4.5
+INETGPL_PROJ = /home/akramber/Omnet/omnetpp-6.0.2/Master/inet-gplus
 
 MAKEMAKE_OPTIONS := -f --deep -o INETGPL -O out -KINET_PROJ=$(INET_PROJ) -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/src -lINET$$\(D\)
 
