@@ -1,14 +1,14 @@
-INET Framework for OMNEST/OMNeT++ - GPL licensed components
-===========================================================
+# INET-GPLUS is the extention of INET-GPL that includes the framework needed for dynamic resource allocations in the HTB.
+This project was developed in the master thesis: Dynamic Resource Allocation and QoE-aware Packet Scheduling using HTB in OMNeT++
+Its code can be found on https://github.com/AndyRamb/improved5gNS2
 
-The [INET framework](https://inet.omnetpp.org) is an open-source communication networks
-simulation package, written for the OMNEST/OMNeT++ simulation system. This is a repository
-containing models that were once part of INET, but cannot be included in the base INET
-repo any longer because they are GPL licensed (as opposed to INET which is under LGPL).
+To run this project you need:
+- OMNeT++ 6.0.2 or later.
+- inet4.5 to be installed and linked within the OMNeT++ program as a project reference to compile and utilise this project.
 
-You must have a properly built INET framework installed along this model under the `../inet`
-directory (or change the INET_PROJ variable in the main Makefile if the directory name is different).
+To utilise the dynamic behaviours implemented an array containing changetimes needs to be defined in the .ini configuration file:
+*.router*.ppp[0].queue.scheduler.changeTimes = []
 
-Contributions are highly welcome. You can make a difference!
-
-See the WHATSNEW file for recent changes.
+The HTB configuration file has switched formats to be a JSON file. Each class can now also include rate variables for future rates at specific changeTimes.
+Within the .ini file you include this:
+*.router*.ppp[0].queue.htbTreeConfig = readJSON("<conffile>.json")
